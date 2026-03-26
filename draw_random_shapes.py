@@ -24,9 +24,9 @@ except Exception as e:
 def random_color(alpha: bool = False) -> Tuple[int, int, int]:
     # return one of: yellow, red, or green
     choices = [
-        (255, 255, 0),  # yellow
-        (255, 0, 0),    # red
-        (0, 255, 0),    # green
+        (237, 239, 96),  # yellow
+        (178, 64, 47),    # red
+        (0, 78, 24),    # green
     ]
     return random.choice(choices)
 
@@ -195,7 +195,7 @@ def generate_batch(
     seed: int = None,
     make_gif: bool = False,
     gif_name: str | None = None,
-    gif_duration: int = 20000,
+    gif_duration: int = 200,
     gif_loop: int = 0,
     **kwargs,
 ):
@@ -207,6 +207,8 @@ def generate_batch(
     - seed: base seed; each image will use seed + idx if provided
     - kwargs: forwarded to generate_image
     """
+    width: int = 800,
+    height: int = 600,
     base, ext = os.path.splitext(output)
     if batch <= 1:
         # single image
@@ -225,8 +227,20 @@ def generate_batch(
     # optionally build a GIF from the generated images
     gif_path = None
     if make_gif and len(out_paths) > 0:
+        images_to_instert = glob.glob("./images/*")
         try:
-            frames = [Image.open(p).convert("RGBA") for p in out_paths]
+            #frames = [Image.open(p).convert("RGBA") for p in out_paths]
+            frames=[]
+            for i, p in enumerate(out_paths):
+                #print(val)
+                frames.append(Image.open(p).convert("RGBA"))
+                if i % 10 == 0:
+                    q  = images_to_instert[(i // 3) % len(images_to_instert)]
+                    img = Image.open(q).convert("RGBA")
+                    for i in range(10):
+                        frames.append(img)
+
+
             gif_path = gif_name if gif_name is not None else f"{base}.gif"
             # PIL will handle conversion to palette for GIF
             frames[0].save(

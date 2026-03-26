@@ -24,14 +24,14 @@ def main():
     print("Generating example batch 1 (5 images, seed base 100) and a GIF")
     generate_batch(
         output=str(out_dir / "example1.png"),
-        batch=500,
+        batch=50,
         start_index=1,
         seed=100,
         make_gif=True,
         gif_name=str(out_dir / "example1.gif"),
         gif_duration=200,
-        width=640,
-        height=480,
+        width=1920,
+        height=1200,
         count=80,
         background="#000000",
     )

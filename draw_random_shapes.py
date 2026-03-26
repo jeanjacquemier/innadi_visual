@@ -1,9 +1,76 @@
 #!/usr/bin/env python3
+
+from pathlib import Path
+
+def hex_to_rgb(hexstr: str):
+    s = hexstr.strip()
+    if s.startswith("#"):
+        s = s[1:]
+    if len(s) == 3:
+        s = ''.join([c*2 for c in s])
+    if len(s) != 6:
+        raise ValueError("Invalid hex color: %r" % hexstr)
+    return tuple(int(s[i:i+2], 16) for i in (0, 2, 4))
+
+
+def center_and_pad(input_path: Path, canvas_w: int, canvas_h: int, fill="#000000", fit: str = "skip"):
+    img = Image.open(input_path)
+    img = img.convert("RGBA")
+
+    # parse fill color
+    try:
+        if isinstance(fill, tuple):
+            bg = fill
+        elif isinstance(fill, str) and fill.startswith("#"):
+            bg = hex_to_rgb(fill)
+        else:
+            # try to let PIL parse named colors
+            tmp = Image.new("RGB", (1,1), fill)
+            bg = tmp.getpixel((0,0))
+    except Exception:
+        bg = (0,0,0)
+    
+    canvas = Image.new("RGBA", (canvas_w, canvas_h), bg + (255,))
+
+    iw, ih = img.size
+
+    # handle oversized input
+    if iw > canvas_w or ih > canvas_h:
+        if fit == "skip":
+            # we won't change the image; paste will be clipped automatically
+            pass
+        elif fit == "scale":
+            # scale to fit inside canvas preserving aspect ratio
+            scale = min(canvas_w / iw, canvas_h / ih)
+            new_size = (max(1, int(iw * scale)), max(1, int(ih * scale)))
+            img = img.resize(new_size, Image.LANCZOS)
+            iw, ih = img.size
+        elif fit == "crop":
+            # center-crop the input to the canvas size
+            left = max(0, (iw - canvas_w) // 2)
+            top = max(0, (ih - canvas_h) // 2)
+            right = left + min(canvas_w, iw)
+            bottom = top + min(canvas_h, ih)
+            img = img.crop((left, top, right, bottom))
+            iw, ih = img.size
+
+    # compute top-left to paste so the image is centered
+    paste_x = (canvas_w - iw) // 2
+    paste_y = (canvas_h - ih) // 2
+
+    # paste using alpha composite to preserve transparency if present
+    canvas.paste(img, (paste_x, paste_y), img)
+
+    # convert to RGB before saving to common formats
+    out = canvas.convert("RGB")
+    return out
+
+
 """
 Create an image with random lines, circles and rectangles using Pillow.
 
 Usage examples:
-  python3 draw_random_shapes.py --output random.png --width 800 --height 600 --count 80
+  python3 draw_random_shapes.py --output random.png --width 1920 --height 1200 --count 80
   python3 draw_random_shapes.py --output out.png --count 200 --seed 42
 
 If Pillow is not installed the script prints install instructions.
@@ -35,8 +102,8 @@ def clamp(v, a, b):
 
 
 def generate_image(
-    width: int = 800,
-    height: int = 600,
+    width: int = 1920,
+    height: int = 1200,
     count: int = 100,
     background=(0, 0, 0),
     seed: int = None,
@@ -207,8 +274,8 @@ def generate_batch(
     - seed: base seed; each image will use seed + idx if provided
     - kwargs: forwarded to generate_image
     """
-    width: int = 800,
-    height: int = 600,
+    width: int = 1920
+    height: int = 1200
     base, ext = os.path.splitext(output)
     if batch <= 1:
         # single image
@@ -228,32 +295,31 @@ def generate_batch(
     gif_path = None
     if make_gif and len(out_paths) > 0:
         images_to_instert = glob.glob("./images/*")
-        try:
-            #frames = [Image.open(p).convert("RGBA") for p in out_paths]
-            frames=[]
-            for i, p in enumerate(out_paths):
-                #print(val)
-                frames.append(Image.open(p).convert("RGBA"))
-                if i % 10 == 0:
-                    q  = images_to_instert[(i // 3) % len(images_to_instert)]
-                    img = Image.open(q).convert("RGBA")
-                    for i in range(10):
-                        frames.append(img)
+        #frames = [Image.open(p).convert("RGBA") for p in out_paths]
+        frames=[]
+        for i, p in enumerate(out_paths):
+            #print(val)
+            frames.append(Image.open(p).convert("RGBA"))
+            if i % 10 == 0:
+                q  = images_to_instert[(i // 3) % len(images_to_instert)]
+                #img = Image.open(q).convert("RGBA")
+                img = center_and_pad(q, width, height)
+                for i in range(10):
+                    frames.append(img)
 
 
-            gif_path = gif_name if gif_name is not None else f"{base}.gif"
-            # PIL will handle conversion to palette for GIF
-            frames[0].save(
-                gif_path,
-                save_all=True,
-                append_images=frames[1:],
-                duration=gif_duration,
-                loop=gif_loop,
-                disposal=2,
-            )
-            print(f"Saved GIF to: {gif_path}")
-        except Exception as e:
-            print(f"Failed to create GIF: {e}")
+        gif_path = gif_name if gif_name is not None else f"{base}.gif"
+        # PIL will handle conversion to palette for GIF
+        frames[0].save(
+            gif_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=gif_duration,
+            loop=gif_loop,
+            disposal=2,
+        )
+        print(f"Saved GIF to: {gif_path}")
+
         for f in glob.glob(f"{base}*.png"):
             os.remove(f)
 
@@ -262,8 +328,8 @@ def generate_batch(
 
 def parse_args():
     p = argparse.ArgumentParser(description="Generate an image with random lines, circles and squares using Pillow")
-    p.add_argument("--width", type=int, default=800, help="Image width")
-    p.add_argument("--height", type=int, default=600, help="Image height")
+    p.add_argument("--width", type=int, default=1920, help="Image width")
+    p.add_argument("--height", type=int, default=1200, help="Image height")
     p.add_argument("--count", type=int, default=100, help="Total number of shapes to draw")
     p.add_argument("--background", type=str, default="#000000", help="Background color (hex like #rrggbb or common name)")
     p.add_argument("--seed", type=int, default=None, help="Optional random seed for reproducible output")
@@ -279,7 +345,7 @@ def parse_args():
 def hex_to_rgb(hexstr: str):
     hexstr = hexstr.strip()
     if hexstr.startswith("#"):
-        hexstr = hexstr[1:]
+        hexstr = hexstpathr[1:]
     if len(hexstr) == 3:
         hexstr = ''.join([c*2 for c in hexstr])
     if len(hexstr) != 6:

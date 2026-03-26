@@ -304,8 +304,8 @@ def generate_batch(
                 q  = images_to_instert[(i // 3) % len(images_to_instert)]
                 #img = Image.open(q).convert("RGBA")
                 img = center_and_pad(q, width, height)
-                for i in range(10):
-                    frames.append(img)
+                #for i in range(10):
+                frames.append(img)
 
 
         gif_path = gif_name if gif_name is not None else f"{base}.gif"

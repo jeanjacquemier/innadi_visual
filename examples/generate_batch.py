@@ -29,30 +29,13 @@ def main():
         seed=100,
         make_gif=True,
         gif_name=str(out_dir / "example1.gif"),
-        gif_duration=200,
+        gif_duration=100,
         width=1920,
         height=1200,
-        count=80,
+        count=40,
         background="#000000",
     )
-    '''
-    # Example 2: 5 images varying sizes
-    print("Generating example batch 2 (5 images, varying sizes)")
-    sizes = [(320,240), (400,300), (480,320), (640,480), (800,600)]
-    sizes = [(800,600), (800,600), (800,600), (800,600), (800,600)]
-    for i, (w,h) in enumerate(sizes, start=1):
-        generate_batch(
-            output=str(out_dir / f"example2_{i}.png"),
-            batch=1,
-            seed=200 + i,
-            width=w,
-            height=h,
-            count=60,
-            background="#000000",
-        )
-
-    print(f"Example images written to: {out_dir}")
-    '''
+  
 
 if __name__ == "__main__":
     main()

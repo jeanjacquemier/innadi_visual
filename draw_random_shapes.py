@@ -94,6 +94,11 @@ def random_color(alpha: bool = False) -> Tuple[int, int, int]:
         (237, 239, 96),  # yellow
         (178, 64, 47),    # red
         (0, 78, 24),    # green
+        (237, 239, 96),  # yellow
+        (0, 78, 24),    # green        
+        (237, 239, 96),  # yellow
+        (0, 78, 24),    # green        
+
     ]
     return random.choice(choices)
 
@@ -139,8 +144,9 @@ def generate_image(
         al, at, ar, ab = expanded(a, pad)
         bl, bt, br, bb = expanded(b, pad)
         return not (ar <= bl or al >= br or ab <= bt or at >= bb)
-    color = random_color()
+   
     for i in range(count):
+        color = random_color()
         shape = random.choice(["line", "circle", "rectangle"])
         
         stroke = random.randint(1, 1)
@@ -300,11 +306,9 @@ def generate_batch(
         for i, p in enumerate(out_paths):
             #print(val)
             frames.append(Image.open(p).convert("RGBA"))
-            if i % 10 == 0:
+            if i % 30 == 0:
                 q  = images_to_instert[(i // 3) % len(images_to_instert)]
-                #img = Image.open(q).convert("RGBA")
                 img = center_and_pad(q, width, height)
-                #for i in range(10):
                 frames.append(img)
 
 
@@ -320,8 +324,8 @@ def generate_batch(
         )
         print(f"Saved GIF to: {gif_path}")
 
-        for f in glob.glob(f"{base}*.png"):
-            os.remove(f)
+        #for f in glob.glob(f"{base}*.png"):
+        #    os.remove(f)
 
     return out_paths if not make_gif else (out_paths, gif_path)
 

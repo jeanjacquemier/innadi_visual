@@ -41,11 +41,12 @@ def draw_sun(
 
     cx, cy = center
     if ray_length is None:
-        ray_length = int(radius * 0.8)
+        ray_length = int(radius * 0.5)
 
     # draw rays
     for i in range(ray_count):
         ray_length = ray_length * random.uniform(.5, 1.5)
+        radius = radius * random.uniform(.8, 1.2)
         angle = (2 * math.pi * i) / ray_count
         # start a little inside the circle edge for nicer overlap
         sx = cx + math.cos(angle) * (radius * 1.2)
@@ -59,7 +60,7 @@ def draw_sun(
     draw.ellipse(bbox, fill=fill, outline=outline)
 
 
-def _demo():
+def _demo(index: int = 0):
     # create a simple demo image
     W, H = 400, 400
     img = Image.new("RGB", (W, H), (255, 255, 255))
@@ -70,10 +71,11 @@ def _demo():
     radius = 60
     draw_sun(draw, center, radius, ray_count=5, ray_width=1)
 
-    out = "sun_demo.png"
+    out = f"sun_images/sun_demo_{index}.png"
     img.save(out)
     print(f"Wrote demo image: {out}")
 
 
 if __name__ == "__main__":
-    _demo()
+    for i in range(5):
+        _demo(i)

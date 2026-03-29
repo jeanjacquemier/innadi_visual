@@ -62,7 +62,7 @@ def draw_sun(
 
 def _demo(index: int = 0):
     # create a simple demo image
-    W, H = 400, 400
+    W, H = 1440, 400
     img = Image.new("RGB", (W, H), (255, 255, 255))
     draw = ImageDraw.Draw(img)
 
